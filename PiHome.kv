@@ -1,0 +1,95 @@
+#:kivy 1.10.0
+
+<SnackBarButton>:
+
+<MainContainer>:
+    SnackBar:
+        orientation: "vertical"
+        size_hint: None, None
+        size: 80, 480
+        SnackBarButton:
+            color: 0,0,0,0.5
+            size_hint: None, None
+            pos: 0, (self.parent.height - (80 * 1))
+            size: 80, 80
+            text: "G"
+            on_release: 
+                manager.transition.direction = 'down'
+                manager.current = 'general'
+        SnackBarButton:
+            color: 0,0,0,0.5
+            size_hint: None, None
+            pos: 0, (self.parent.height - (80 * 2))
+            size: 80, 80
+            text: "W"
+            on_release: 
+                manager.transition.direction = 'down'
+                manager.current = 'weather'
+        SnackBarButton:
+            color: 0,0,0,0.5
+            size_hint: None, None
+            pos: 0, (self.parent.height - (80 * 3))
+            size: 80, 80
+            text: "H"
+            on_release: 
+                manager.transition.direction = 'down'
+                manager.current = 'home_control'
+    Manager:
+        id: manager
+        pos: 80, 0
+        size_hint: None, None
+        size: 720, 480
+        GeneralScreen:
+            name: "general"
+            size_hint: None, None
+            size: 720, 480
+            FloatLayout:
+                Video:
+                    id: vplayer
+                    source: "test.mp4"
+                    opacity: 0
+                FloatLayout:
+                    size_hint: 0.4, 0.5
+                    pos_hint: {'top' : 1, 'right' :1}
+                    RedditRising:
+                        pos_hint: {'top' : 1, 'right' :1}
+                        GridLayout:
+                            cols: 1
+                            size_hint_y:None
+                            height: self.minimum_height
+                            Button:
+                                size_hint: None, None
+                                size: 80,80
+                                text: "Hello"
+                                on_press: 
+                                    vplayer.opacity = 1
+                                    vplayer.state = 'play'
+                            Button:
+                                size_hint: None, None
+                                size: 80,80
+                                text: "world"
+                            Button:
+                                size_hint: None, None
+                                size: 80,80
+                                text: "Hello"
+                            Button:
+                                size_hint: None, None
+                                size: 80,80
+                                text: "world"
+                            Button:
+                                size_hint: None, None
+                                size: 80,80
+                                text: "Hello"
+                            Button:
+                                size_hint: None, None
+                                size: 80,80
+                                text: "world"
+
+        WeatherScreen:
+            name: "weather"
+            size_hint: None, None
+            size: 720, 480
+        HomeControlScreen:
+            name: "home_control"
+            size_hint: None, None
+            size: 720, 480

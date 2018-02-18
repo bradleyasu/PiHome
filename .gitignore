@@ -1,2 +1,5 @@
 
 .vscode/settings.json
+*.json
+*.mp4
+*.jpg
