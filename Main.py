@@ -5,6 +5,7 @@ Primary class for setting up and controling screens
 
 from kivy.app import App
 from kivy.app import Widget
+from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -16,13 +17,15 @@ from kivy.graphics.vertex_instructions import Rectangle
 from kivy.graphics.context_instructions import Color
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.settings import SettingsWithSidebar
-
+from kivy.properties import StringProperty
 from Settings import general_settings 
+from RedditParser import RParse
 import time
 
 class MainContainer(FloatLayout):
     def __init__(self, **kwargs):
         super(MainContainer, self).__init__(**kwargs)
+        Clock.schedule_once(self.change_bg, 2)
         Clock.schedule_interval(self.change_bg, 10)
         with self.canvas.before:
             self.bg = Rectangle(source="default_bg.jpg", pos=self.pos, size=self.size)
@@ -34,7 +37,9 @@ class MainContainer(FloatLayout):
         self.bg.size = self.size
 
     def change_bg(self, *args):
-        self.bg.source = "default_bg_2.jpg"
+        source = App.get_running_app().config.get('General', 'wallpaperSourceOne')
+        name = RParse().selectRandomUrl(source)
+        self.bg.source = name
         self.bg.pos = self.pos
         self.bg.size = self.size
 
@@ -97,7 +102,9 @@ class  PiHomeApp(App):
     def build(self):
         self.settings_cls = SettingsWithSidebar
         self.use_kivy_settings = False
-        return MainContainer()
+        mc = MainContainer()
+        self.main = mc
+        return mc
     
     def build_config(self, config):
         config.setdefaults('General',
@@ -113,10 +120,10 @@ class  PiHomeApp(App):
         settings.add_json_panel('General', self.config, data=general_settings)
 
     def on_config_change(self, config, section, key, value):
-        print config, section, key, value
-
+        self.main.change_bg()
 
 if __name__ == '__main__':
+    #Builder.load_file("PiHome.kv")
     Window.size = (800,480)
     #Window.fullscreen = True
     PiHomeApp().run()
