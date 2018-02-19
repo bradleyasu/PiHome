@@ -23,7 +23,7 @@ class RParse:
                 while not (url.endswith(".jpg")):
                     post = posts[randint(0, 25)]['data']
                     url = post['url']
-                hsh = uuid.uuid4().hex
+                hsh = uuid.uuid4().hex[:8]
                 filename = "wallpapers/dbg_"+hsh+"."+url[-3:]
                 urllib.urlretrieve(url, filename)
                 success = True

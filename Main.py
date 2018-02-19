@@ -55,7 +55,7 @@ class SnackBar(FloatLayout):
         super(SnackBar, self).__init__(**kwargs)
         self.size = (80, 480)
         with self.canvas:
-            Color(200,200,200,0.1)
+            Color(0,0,0,0.2)
             Rectangle(pos=(0,0), size=self.size)
 
 class SnackBarButton(Button):
@@ -66,7 +66,11 @@ class SnackBarButton(Button):
 class Manager(ScreenManager):
     def __init__(self, **kwargs):
         super(Manager, self).__init__(**kwargs)
+        Clock.schedule_once(self.startIt, 5)
         self.size = (720, 480)
+    
+    def startIt(self, *args):
+        self.current = "general"
 
 class GeneralScreen(Screen):
     def __init__(self, **kwargs):
@@ -104,8 +108,29 @@ class WeatherScreen(Screen):
         super(WeatherScreen, self).__init__(**kwargs)
         self.size = (720, 480)
         with self.canvas:
-            Color(240,240,240,0.2)
+            Color(240,240,240,0.0)
             Rectangle(pos=(0,0), size=self.size)
+
+    def loadWeather(self, *args):
+        apiKey = App.get_running_app().config.get('Weather', 'owmKey')
+        zipCode = App.get_running_app().config.get('Weather', 'zip')
+        today = self.ids.today
+        tomorrow = self.ids.tomorrow
+        nextDay = self.ids.nextDay
+        if apiKey != "":
+            weatherData = WParse().getForecast(apiKey, zipCode, 3)
+            today.forecast = weatherData[0][0]
+            today.imgSource = weatherData[0][1]+".png"
+            today.temp = str(weatherData[0][2])+"F"
+
+            tomorrow.forecast = weatherData[1][0]
+            tomorrow.imgSource = weatherData[1][1]+".png"
+            tomorrow.temp = str(weatherData[1][2])+"F"
+
+            nextDay.forecast = weatherData[2][0]
+            nextDay.imgSource = weatherData[2][1]+".png"
+            nextDay.temp = str(weatherData[2][2])+"F"
+
 
 class HomeControlScreen(Screen):
     def __init__(self, **kwargs):
@@ -113,6 +138,14 @@ class HomeControlScreen(Screen):
         self.size = (720, 480)
         with self.canvas:
             Color(0,0,0,0.5)
+            Rectangle(pos=(0,0), size=self.size)
+
+class WelcomeScreen(Screen):
+    def __init__(self, **kwargs):
+        super(WelcomeScreen, self).__init__(**kwargs)
+        self.size = (720, 480)
+        with self.canvas:
+            Color(0,0,0,1)
             Rectangle(pos=(0,0), size=self.size)
 
 class RedditRising(ScrollView):
@@ -136,7 +169,8 @@ class RedditLink(Widget):
             Color(0,0,0,0.4)
             Rectangle(pos=(0,0), size=self.size)
 
-
+class WeatherBox(Widget):
+    pass
 
 class  PiHomeApp(App):
     def build(self):
