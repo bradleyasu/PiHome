@@ -32,28 +32,37 @@
         size_hint: None, None
         pos: 0, (self.parent.height - (80 * 1))
         size: 80, 80
-        text: "G"
         on_press: 
             app.root.ids.manager.transition.direction = 'down'
             app.root.ids.manager.current = 'general'
+        Image: 
+            source: "icons/general.png"
+            size: 80,80
+            pos: 0, (self.parent.parent.height - (80 * 1))
     SnackBarButton:
         color: 0,0,0,0.5
         size_hint: None, None
         pos: 0, (self.parent.height - (80 * 2))
         size: 80, 80
-        text: "W"
         on_press: 
             app.root.ids.manager.transition.direction = 'down'
             app.root.ids.manager.current = 'weather'
+        Image: 
+            source: "icons/weather.png"
+            size: 80,80
+            pos: 0, (self.parent.parent.height - (80 * 2))
     SnackBarButton:
         color: 0,0,0,0.5
         size_hint: None, None
         pos: 0, (self.parent.height - (80 * 3))
         size: 80, 80
-        text: "H"
         on_press: 
             app.root.ids.manager.transition.direction = 'down'
             app.root.ids.manager.current = 'home_control'
+        Image: 
+            source: "icons/home_control.png"
+            pos: 0, (self.parent.parent.height - (80 * 3))
+            size: 80,80
     SnackBarButton:
         color: 0,0,0,0.5
         size_hint: None, None
@@ -75,8 +84,31 @@
         FloatLayout:
             id: infoBar
             Label:
-                size_hint: 1.5, 0.2
+                size_hint: 1.6, 0.4
+                id: gweather
+                text: "Checking Weather..."
+                pos_hint: {'bottom': 1, 'right': 1}
+                font_size: '22sp'
+                outline_color: 0,0,0,0.6
+                outline_width: 1
+            Label:
+                size_hint: 1.6, 0.2
+                id: gtemp
+                text: "--F"
+                pos_hint: {'bottom': 1, 'right': 1}
+                font_size: '72sp'
+                outline_color: 0,0,0,0.6
+                outline_width: 1
+            Label:
+                size_hint: 1.5, 0.4
+                id: gdate
+                text: "Loading..."
                 pos_hint: {'bottom': 1, 'left': 1}
+                font_size: '22sp'
+                outline_color: 0,0,0,0.6
+                outline_width: 1
+            Label:
+                size_hint: 1.5, 0.2
                 id: gclock
                 text: "00:00 PM"
                 pos_hint: {'bottom': 1, 'left': 1}
@@ -91,60 +123,13 @@
                 size_hint: 0.4, 0.5
                 pos_hint: {'top' : 1, 'right' :1}
                 RedditRising:
+                    id: reddit_rising
                     pos_hint: {'top' : 1, 'right' :1}
                     GridLayout:
+                        id: reddit_news
                         cols: 1
                         size_hint_y:None
                         height: self.minimum_height
-                        Button:
-                            size_hint: None, None
-                            size: 80,80
-                            text: "Hello"
-                            on_press: 
-                                vplayer.opacity = 1
-                                vplayer.state = 'play'
-                        Button:
-                            size_hint: None, None
-                            size: 80,80
-                            text: "Hello"
-                            on_press: 
-                                vplayer.opacity = 1
-                                vplayer.state = 'play'
-                        Button:
-                            size_hint: None, None
-                            size: 80,80
-                            text: "Hello"
-                            on_press: 
-                                vplayer.opacity = 1
-                                vplayer.state = 'play'
-                        Button:
-                            size_hint: None, None
-                            size: 80,80
-                            text: "Hello"
-                            on_press: 
-                                vplayer.opacity = 1
-                                vplayer.state = 'play'
-                        Button:
-                            size_hint: None, None
-                            size: 80,80
-                            text: "Hello"
-                            on_press: 
-                                vplayer.opacity = 1
-                                vplayer.state = 'play'
-                        Button:
-                            size_hint: None, None
-                            size: 80,80
-                            text: "Hello"
-                            on_press: 
-                                vplayer.opacity = 1
-                                vplayer.state = 'play'
-                        Button:
-                            size_hint: None, None
-                            size: 80,80
-                            text: "Hello"
-                            on_press: 
-                                vplayer.opacity = 1
-                                vplayer.state = 'play'
 <WeatherScreen>:
     name: "weather"
     size_hint: None, None
@@ -154,3 +139,15 @@
     name: "home_control"
     size_hint: None, None
     size: 720, 480
+
+
+<RedditLink>:
+    size_hint: None,None
+    Image:
+        id: thumbnail
+        size: 64,64
+        source: "icons/general.png"
+    Label:
+        id: title
+        pos: 70, 0
+        text: "TEST HEADLINE"
