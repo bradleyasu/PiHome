@@ -12,7 +12,7 @@ class RParse:
         r = requests.get('https://www.reddit.com/r/'+subreddit+'/.json', headers = {'User-agent': 'Chrome'})
         data = json.loads(r.text)
         posts = data['data']['children']
-        filename = "default_bg_2.jpg"
+        filename = "default_bg.jpg"
         success = False
         self.count = 0
         for f in glob.glob("wallpapers/dbg_*"):
@@ -29,7 +29,25 @@ class RParse:
                 success = True
             except:
                 self.count = self.count + 1
-                filename = "default_bg_2.jpg"
+                filename = "default_bg.jpg"
                 print "Failed to update"
         return filename
 
+    def getRisingNews(self, subreddit, minUps):
+        r = requests.get('https://www.reddit.com/r/'+subreddit+'/rising/.json', headers = {'User-agent': 'Chrome'})
+        data = json.loads(r.text)
+        posts = data['data']['children']
+        current = []
+        for post in posts:
+            title =  post['data']['title']
+            url =  post['data']['url']
+            thumbnail = post['data']['thumbnail']
+            ups = post['data']['ups']
+            gold = post['data']['gilded']
+            pinned = post['data']['pinned']
+            source = post['data']['domain']
+            
+            if ups >= minUps or gold == "1" or gold == 1 or pinned == True or pinned == "True":
+                current.append([title,url,thumbnail,ups,gold,pinned,source])
+
+        return current

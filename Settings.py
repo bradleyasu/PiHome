@@ -51,5 +51,19 @@ general_settings = json.dumps([
         'section': "General",
         'key': 'wallpaperActiveSource',
         'options': ['Source One', 'Source Two']
+    },
+    {
+        'type': 'string',
+        'title': 'News Subreddit Source',
+        'desc': 'Which subreddit(s) would you like to monitor?',
+        'section': "RedditRising",
+        'key': 'rrsource',
+    },
+    {
+        'type': 'numeric',
+        'title': 'Upvotes Required',
+        'desc': 'What is the minimum upvotes required to display?',
+        'section': "RedditRising",
+        'key': 'rrups',
     }
 ])

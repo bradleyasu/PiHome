@@ -68,6 +68,18 @@
     SnackBarButton:
         color: 0,0,0,0.5
         size_hint: None, None
+        pos: 0, (self.parent.height - (80 * 4))
+        size: 80, 80
+        on_press: 
+            app.root.ids.manager.transition.direction = 'down'
+            app.root.ids.manager.current = 'home_control'
+        Image: 
+            source: "icons/spotify.png"
+            pos: 0, (self.parent.parent.height - (80 * 4))
+            size: 80,80
+    SnackBarButton:
+        color: 0,0,0,0.5
+        size_hint: None, None
         pos: 0, 0
         size: 80, 80
         on_press: 
@@ -140,21 +152,21 @@
             id: today
             size_hint: None, None
             pos: 80, 180
-            text: "Today"
+            text: "Today (Now)"
             forecast: "Loading..."
             imgSource: "noData.png"
         WeatherBox:
             id: tomorrow
             size_hint: None, None
             pos: 280,180
-            text: "Tomorrow"
+            text: "Tomorrow (24hrs)"
             forecast: "Loading..."
             imgSource: "noData.png"
         WeatherBox:
             id: nextDay
             size_hint: None, None
             pos: 480,180
-            text: "The Day After"
+            text: "The Day After (48hrs)"
             forecast: "Loading..."
             imgSource: "noData.png"
         Label:
@@ -238,11 +250,34 @@
 
 <RedditLink>:
     size_hint: None,None
-    Image:
+    canvas:
+        Color:
+            rgb: 0.1,0.1,0.1
+        Line:
+            width: 1.
+            rectangle: (self.x, self.y, self.width, self.height)
+        Color:
+            rgba: root.color
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    AsyncImage:
         id: thumbnail
+        size_hint: None, None
         size: 64,64
-        source: "icons/general.png"
+        source: root.thumbnail
+        pos: root.x+2,root.y+(root.height/2 - self.height/2)
     Label:
         id: title
-        pos: 70, 0
-        text: "TEST HEADLINE"
+        size_hint:None, None
+        pos: root.x+70, root.y+root.height-10-self.height
+        size: self.texture_size
+        font_size: '14sp'
+        text: root.text
+    Label:
+        id: info
+        size_hint:None, None
+        pos: root.x+root.width-self.width-10, root.y+5
+        size: self.texture_size
+        font_size: '10sp'
+        text: root.ups +" | "+root.source

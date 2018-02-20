@@ -19,6 +19,7 @@ from kivy.graphics.context_instructions import Color
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.properties import StringProperty
+from kivy.properties import ListProperty 
 from Settings import general_settings 
 from Settings import weather_settings 
 from RedditParser import RParse
@@ -31,7 +32,7 @@ class MainContainer(FloatLayout):
         Clock.schedule_once(self.change_bg, 5)
         Clock.schedule_interval(self.change_bg, 60)
         with self.canvas.before:
-            self.bg = Rectangle(source="default_bg_2.jpg", pos=self.pos, size=self.size)
+            self.bg = Rectangle(source="default_bg.jpg", pos=self.pos, size=self.size)
         self.bind(pos=self.update_bg)
         self.bind(size=self.update_bg)
 
@@ -41,14 +42,16 @@ class MainContainer(FloatLayout):
         self.bg.size = self.size
 
     def change_bg(self, *args):
-        source = App.get_running_app().config.get('General', 'wallpaperSourceOne')
-        name = RParse().selectRandomUrl(source)
-        try:
-            self.bg.source = name
-        except:
-            self.bg.source = "default_bg_2.jpg"
-        self.bg.pos = self.pos
-        self.bg.size = self.size
+        enabled = App.get_running_app().config.get('General', 'wallpaperRefresh')
+        if enabled == "1":
+            source = App.get_running_app().config.get('General', 'wallpaperSourceOne')
+            name = RParse().selectRandomUrl(source)
+            try:
+                self.bg.source = name
+            except:
+                self.bg.source = "default_bg.jpg"
+        else:
+            self.bg.source = "default_bg.jpg"
 
 class SnackBar(FloatLayout):
     def __init__(self, **kwargs):
@@ -97,10 +100,10 @@ class GeneralScreen(Screen):
         if apiKey != "":
             weatherData = WParse().getCurrentWeather(apiKey, zipCode)
             weather.text = weatherData[0] + " | " + weatherData[1]
-            temp.text = str(weatherData[2]) + "F"
+            temp.text = str(weatherData[2]) +u'\xb0'+ "F"
         else:
             weather.text = "No API Key Set" 
-            temp.text = "--F"
+            temp.text = "--"+u'\xb0'+"F"
 
 
 class WeatherScreen(Screen):
@@ -121,15 +124,15 @@ class WeatherScreen(Screen):
             weatherData = WParse().getForecast(apiKey, zipCode, 3)
             today.forecast = weatherData[0][0]
             today.imgSource = weatherData[0][1]+".png"
-            today.temp = str(weatherData[0][2])+"F"
+            today.temp = str(weatherData[0][2])+u'\xb0'+"F"
 
             tomorrow.forecast = weatherData[1][0]
             tomorrow.imgSource = weatherData[1][1]+".png"
-            tomorrow.temp = str(weatherData[1][2])+"F"
+            tomorrow.temp = str(weatherData[1][2])+u'\xb0'+"F"
 
             nextDay.forecast = weatherData[2][0]
             nextDay.imgSource = weatherData[2][1]+".png"
-            nextDay.temp = str(weatherData[2][2])+"F"
+            nextDay.temp = str(weatherData[2][2])+u'\xb0'+"F"
 
 
 class HomeControlScreen(Screen):
@@ -145,29 +148,40 @@ class WelcomeScreen(Screen):
         super(WelcomeScreen, self).__init__(**kwargs)
         self.size = (720, 480)
         with self.canvas:
-            Color(0,0,0,1)
+            Color(0,0,0,0.2)
             Rectangle(pos=(0,0), size=self.size)
+
 
 class RedditRising(ScrollView):
     def __init__(self, **kwargs):
         super(RedditRising, self).__init__(**kwargs)
-        #Clock.schedule_interval(self.update_links, 5)
-#       with self.canvas:
-#           Color(0,1,0,1)
-#           Rectangle(pos=(0,0), size=self.size)
+        Clock.schedule_once(self.update_links, 8)
+        Clock.schedule_interval(self.update_links, 300)
 
     def update_links(self, *args):
         self.children[0].clear_widgets()
-        self.children[0].add_widget(RedditLink())
-        self.children[0].add_widget(RedditLink())
+        subs = App.get_running_app().config.get('RedditRising', 'rrsource')
+        minups = App.get_running_app().config.get('RedditRising', 'rrups')
+        posts = RParse().getRisingNews(subs, int(minups))
+        for post in posts:
+            title = post[0]
+            color = [0,0,0,0.4]
+            if post[4] == 1 or post[4] == "1" or post[5] == True or post[5] == "True":
+                color = [1,0,0,0.4]
+            title = '\n'.join(title[i:i+26] for i in range(0, len(title), 26))
+            if(len(title) > 64):
+                title = title[:64]+"..."
+            self.children[0].add_widget(RedditLink(text=title, thumbnail=post[2], ups=str(post[3]), source=post[6], color=color))
 
 class RedditLink(Widget):
+    text = StringProperty("Text Not Set")
+    thumbnail = StringProperty("icons/reddit.png")
+    ups = StringProperty("----")
+    source = StringProperty("unknown")
+    color = ListProperty([0,0,0,0.4])
     def __init__(self, **kwargs):
         super(RedditLink, self).__init__(**kwargs)
         self.size = (280, 70)
-        with self.canvas.before:
-            Color(0,0,0,0.4)
-            Rectangle(pos=(0,0), size=self.size)
 
 class WeatherBox(Widget):
     pass
@@ -189,6 +203,12 @@ class  PiHomeApp(App):
                 'wallpaperActiveSource': 'Source One',
             } 
         )
+        config.setdefaults('RedditRising',
+            {
+                'rrsource': 'politics',
+                'rrups': 350,
+            } 
+        )
         config.setdefaults('Weather',
             {
                 'zip': '20001',
@@ -201,7 +221,8 @@ class  PiHomeApp(App):
         settings.add_json_panel('Weather', self.config, data=weather_settings)
 
     def on_config_change(self, config, section, key, value):
-        self.main.change_bg()
+        if key == "wallpaperSourceOne" or key == "wallpaperSourceTwo" or key == "wallpaperRefresh":
+            self.main.change_bg()
 
 if __name__ == '__main__':
     #Builder.load_file("PiHome.kv")
