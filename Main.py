@@ -97,16 +97,38 @@ class Manager(ScreenManager):
         
     def handleRequest(self, data):
         if data[0] == "info":
-            self.get_screen("aio").set_color(data[1])
-            self.get_screen("aio").set_text(data[2])
+            if len(data) > 1:
+                self.get_screen("aio").set_color(data[1])
+            if len(data) > 2:
+                self.get_screen("aio").set_text(data[2])
             if len(data) > 3:
                 self.get_screen("aio").set_title(data[3])
+            if len(data) > 4:
+                self.get_screen("aio").set_image(data[4])
             if len(data) > 5:
-                self.get_screen("aio").set_image(data[4]+":"+data[5])
+                try:
+                    time = int(data[5])
+                    Clock.schedule_once(self.startIt, time)
+                except:
+                    pass
+
             prevTransition = self.transition
             self.transition = RiseInTransition()
             self.current = "aio"
             self.transition = prevTransition
+
+        if data[0] == "image":
+            if len(data) > 1:
+                if(data[1].endswith(".png") or data[1].endswith(".jpg")):
+                    self.get_screen("aio").set_image(data[1])
+            if len(data) > 2:
+                self.get_screen("aio").set_color(data[2])
+            if len(data) > 3:
+                try:
+                    time = int(data[3])
+                    Clock.schedule_once(self.startIt, time)
+                except:
+                    pass
 
 class AIOScreen(Screen):
     title = StringProperty("")

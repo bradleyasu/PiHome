@@ -18,9 +18,7 @@ class AIOParse:
                 itemId = data['id']
                 self.deleteItem(aioUser, aioFeed, apikey, itemId)
                 # Format key:rgba color:data_string
-                last = data['value'].split(":")
-                if(len(last) < 3):
-                    last = []
+                last = data['value'].split(";")
         except Exception as E:
             print E
             last = ""
