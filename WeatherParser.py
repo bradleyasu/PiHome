@@ -23,5 +23,7 @@ class WParse:
             forecast.append(day)
         return forecast
 
+    def getForecastMap(self, key, zip):
+        return "http://api.wunderground.com/api/"+key+"/animatedradar/q/zip/"+zip+"/image.gif?width=600&height=400&newmaps=1&noclutter=1"
 
 #WParse().getCurrentWeather() 

@@ -8,10 +8,12 @@ from kivy.app import Widget
 from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.button import Button
-from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.screenmanager import ScreenManager, Screen, RiseInTransition
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
+from kivy.uix.modalview import ModalView
+from kivy.uix.image import Image, AsyncImage
 from kivy.animation import AnimationTransition, Animation
 from kivy.core.window import Window
 from kivy.graphics.vertex_instructions import Rectangle
@@ -22,8 +24,10 @@ from kivy.properties import StringProperty
 from kivy.properties import ListProperty 
 from Settings import general_settings 
 from Settings import weather_settings 
+from Settings import ifttt_settings 
 from RedditParser import RParse
 from WeatherParser import WParse
+from AIOParser import AIOParse
 import time
 
 class MainContainer(FloatLayout):
@@ -70,10 +74,64 @@ class Manager(ScreenManager):
     def __init__(self, **kwargs):
         super(Manager, self).__init__(**kwargs)
         Clock.schedule_once(self.startIt, 5)
+        self.scheduleAio()
         self.size = (720, 480)
     
     def startIt(self, *args):
         self.current = "general"
+    
+    def scheduleAio(self, *args):
+        enabled = App.get_running_app().config.get('IFTTT', 'aioEnabled')
+        Clock.unschedule(self.pingAio)
+        if enabled == "1":
+            Clock.schedule_interval(self.pingAio, 10)
+
+    def pingAio(self, *args):
+        aioUsername = App.get_running_app().config.get('IFTTT', 'aioUsername')
+        aioKey = App.get_running_app().config.get('IFTTT', 'aioKey')
+        aioFeed = App.get_running_app().config.get('IFTTT', 'aioFeedKey')
+        if aioUsername != "" and aioKey != "" and aioFeed != "":
+            data = AIOParse().getLastItem(aioUsername, aioFeed, aioKey)
+            if len(data) > 0:
+                self.handleRequest(data)
+        
+    def handleRequest(self, data):
+        if data[0] == "info":
+            self.get_screen("aio").set_color(data[1])
+            self.get_screen("aio").set_text(data[2])
+            if len(data) > 3:
+                self.get_screen("aio").set_title(data[3])
+            if len(data) > 5:
+                self.get_screen("aio").set_image(data[4]+":"+data[5])
+            prevTransition = self.transition
+            self.transition = RiseInTransition()
+            self.current = "aio"
+            self.transition = prevTransition
+
+class AIOScreen(Screen):
+    title = StringProperty("")
+    header = StringProperty("")
+    subtext = StringProperty("")
+    imageSource = StringProperty("")
+    color = ListProperty([0,0,0,0.5])
+    def __init__(self, **kwargs):
+        super(AIOScreen, self).__init__(**kwargs)
+
+    def set_title(self, title):
+        self.title = title
+    
+    def set_image(self, image):
+        self.imageSource = image
+
+    def set_color(self, color):
+        rgba = color.split(",")
+        if len(rgba) == 4:
+            self.color = [int(rgba[0])/255.0,int(rgba[1])/255.0,int(rgba[2])/255.0,int(rgba[3])/255.0]
+
+    def set_text(self, data):
+        parts = data.split(",")
+        self.header = parts[0]
+        self.subtext = parts[1]
 
 class GeneralScreen(Screen):
     def __init__(self, **kwargs):
@@ -162,16 +220,18 @@ class RedditRising(ScrollView):
         self.children[0].clear_widgets()
         subs = App.get_running_app().config.get('RedditRising', 'rrsource')
         minups = App.get_running_app().config.get('RedditRising', 'rrups')
-        posts = RParse().getRisingNews(subs, int(minups))
-        for post in posts:
-            title = post[0]
-            color = [0,0,0,0.4]
-            if post[4] == 1 or post[4] == "1" or post[5] == True or post[5] == "True":
-                color = [1,0,0,0.4]
-            title = '\n'.join(title[i:i+26] for i in range(0, len(title), 26))
-            if(len(title) > 64):
-                title = title[:64]+"..."
-            self.children[0].add_widget(RedditLink(text=title, thumbnail=post[2], ups=str(post[3]), source=post[6], color=color))
+        enabled = App.get_running_app().config.get('RedditRising', 'rrenabled')
+        if enabled == "1":
+            posts = RParse().getRisingNews(subs, int(minups))
+            for post in posts:
+                title = post[0]
+                color = [0,0,0,0.4]
+                if post[4] == 1 or post[4] == "1" or post[5] == True or post[5] == "True":
+                    color = [1,0,0,0.4]
+                title = '\n'.join(title[i:i+26] for i in range(0, len(title), 26))
+                if(len(title) > 64):
+                    title = title[:64]+"..."
+                self.children[0].add_widget(RedditLink(text=title, thumbnail=post[2], ups=str(post[3]), source=post[6], color=color, url=post[2]))
 
 class RedditLink(Widget):
     text = StringProperty("Text Not Set")
@@ -179,12 +239,33 @@ class RedditLink(Widget):
     ups = StringProperty("----")
     source = StringProperty("unknown")
     color = ListProperty([0,0,0,0.4])
+    url = StringProperty("")
     def __init__(self, **kwargs):
         super(RedditLink, self).__init__(**kwargs)
         self.size = (280, 70)
 
+    def on_touch_down(self, touch):
+        if self.collide_point(touch.x, touch.y):
+            view = ModalView(size_hint=(None, None), size=(600,400))
+            #view.add_widget(RedditLink(text=self.text,thumbnail=self.thumbnail,ups=self.ups,source=self.source,color=self.color))
+            view.add_widget(AsyncImage(source=self.url))
+            view.open()
+
 class WeatherBox(Widget):
-    pass
+    def __init__(self, **kwargs):
+        super(WeatherBox, self).__init__(**kwargs)
+
+    def on_touch_down(self, touch):
+        apiKey = App.get_running_app().config.get('Weather', 'wuKey')
+        zipCode = App.get_running_app().config.get('Weather', 'zip')
+        if self.collide_point(touch.x, touch.y):
+            view = ModalView(size_hint=(None, None), size=(600,400))
+            if apiKey != "":
+                image = WParse().getForecastMap(apiKey, zipCode)
+                view.add_widget(AsyncImage(source=image,halign='middle'))
+            else:
+                view.add_widget(Label(text="Uhohs: No API Key Set\nUpdate Weather Underground API Key in Settings"))
+            view.open()
 
 class  PiHomeApp(App):
     def build(self):
@@ -207,18 +288,29 @@ class  PiHomeApp(App):
             {
                 'rrsource': 'politics',
                 'rrups': 350,
+                'rrenabled': True
             } 
         )
         config.setdefaults('Weather',
             {
                 'zip': '20001',
                 'owmKey': '',
+                'wuKey': '',
+            } 
+        )
+        config.setdefaults('IFTTT',
+            {
+                'aioKey': '',
+                'aioEnabled': False,
+                'aioUsername': '',
+                'aioFeedKey': ''
             } 
         )
     
     def build_settings(self, settings): 
         settings.add_json_panel('General', self.config, data=general_settings)
         settings.add_json_panel('Weather', self.config, data=weather_settings)
+        settings.add_json_panel('IFTTT', self.config, data=ifttt_settings)
 
     def on_config_change(self, config, section, key, value):
         if key == "wallpaperSourceOne" or key == "wallpaperSourceTwo" or key == "wallpaperRefresh":

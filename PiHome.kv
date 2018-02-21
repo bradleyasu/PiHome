@@ -22,6 +22,8 @@
         id: weather_screen
     HomeControlScreen:
         id: home_control_screen
+    AIOScreen:
+        id: aio_screen
     
 
 <SnackBar>:
@@ -186,6 +188,39 @@
     size_hint: None, None
     size: 720, 480
 
+<AIOScreen>:
+    name: "aio"
+    size: 720, 480
+    canvas:
+        Color:
+            rgba: root.color
+        Rectangle:
+            size: self.size
+            pos: 0,0
+    AsyncImage:
+        source: root.imageSource
+        size_hint: None, None
+        size: self.texture_size
+        pos: root.width/2-self.width/2, root.height/2-self.height/2
+    Label:
+        text: root.title
+        size_hint: None, None
+        size: self.texture_size
+        pos: 10, root.height-self.height-10
+        font_size: '40sp'
+    Label:
+        text: root.header
+        size_hint: None, None
+        size: self.texture_size
+        pos: root.width/2-self.width/2, 90
+        font_size: '32sp'
+    Label:
+        text: root.subtext
+        size_hint: None, None
+        size: self.texture_size
+        pos: root.width/2-self.width/2, 60
+        font_size: '20sp'
+
 <WelcomeScreen>:
     name: "welcome"
     id: welcome_screen
@@ -194,7 +229,7 @@
     FloatLayout:
         Label:
             text: "PiHome"
-            font_size: '48sp'
+            font_size: '52sp'
         Label:
             text: "Version 2.0.0"
             font_size: '16sp'
@@ -252,7 +287,7 @@
     size_hint: None,None
     canvas:
         Color:
-            rgb: 0.1,0.1,0.1
+            rgba: root.color[0], root.color[1], root.color[2], root.color[3]+0.2
         Line:
             width: 1.
             rectangle: (self.x, self.y, self.width, self.height)
