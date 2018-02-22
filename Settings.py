@@ -20,10 +20,17 @@ ifttt_settings = json.dumps([
     },
     {
         'type': 'string',
-        'title': "AdaFruit IO Feed Key",
+        'title': "AdaFruit IO Receive Feed Key",
         'desc': "Which feed would you like to monitor?",
         'section': "IFTTT",
         'key': 'aioFeedKey'
+    },
+    {
+        'type': 'string',
+        'title': "AdaFruit IO Send Feed Key",
+        'desc': "Which feed would you like to post commands to?",
+        'section': "IFTTT",
+        'key': 'aioSendFeedKey'
     },
     {
         'type': 'bool',

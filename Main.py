@@ -28,17 +28,34 @@ from Settings import ifttt_settings
 from RedditParser import RParse
 from WeatherParser import WParse
 from AIOParser import AIOParse
+import subprocess
 import time
 
 class MainContainer(FloatLayout):
+    screen_saver_on = False
+    last_touch_time = int(time.time())
     def __init__(self, **kwargs):
         super(MainContainer, self).__init__(**kwargs)
         Clock.schedule_once(self.change_bg, 5)
         Clock.schedule_interval(self.change_bg, 60)
+        Clock.schedule_interval(self.screen_saver, 30)
         with self.canvas.before:
             self.bg = Rectangle(source="default_bg.jpg", pos=self.pos, size=self.size)
         self.bind(pos=self.update_bg)
         self.bind(size=self.update_bg)
+
+    def on_touch_down(self, touch):
+        if self.screen_saver_on:
+            self.screen_saver_on = False
+            subprocess.call(["sudo", "./backlight", "255"])
+        self.last_touch_time = int(time.time())
+        return super(MainContainer, self).on_touch_down(touch)
+
+    def screen_saver(self, *args):
+        now = int(time.time())
+        if not self.screen_saver_on and now - self.last_touch_time > 30:
+            subprocess.call(["sudo", "./backlight", "20"])
+            self.screen_saver_on = True
 
 
     def update_bg(self, *args):
@@ -96,6 +113,7 @@ class Manager(ScreenManager):
                 self.handleRequest(data)
         
     def handleRequest(self, data):
+        self.get_screen("aio").reset()
         if data[0] == "info":
             if len(data) > 1:
                 self.get_screen("aio").set_color(data[1])
@@ -129,6 +147,10 @@ class Manager(ScreenManager):
                     Clock.schedule_once(self.startIt, time)
                 except:
                     pass
+            prevTransition = self.transition
+            self.transition = RiseInTransition()
+            self.current = "aio"
+            self.transition = prevTransition
 
 class AIOScreen(Screen):
     title = StringProperty("")
@@ -138,6 +160,13 @@ class AIOScreen(Screen):
     color = ListProperty([0,0,0,0.5])
     def __init__(self, **kwargs):
         super(AIOScreen, self).__init__(**kwargs)
+
+    def reset(self):
+        self.title = ""
+        self.header = ""
+        self.subtext = ""
+        self.imageSource = ""
+        self.color = [0,0,0,0.5]
 
     def set_title(self, title):
         self.title = title
@@ -153,7 +182,8 @@ class AIOScreen(Screen):
     def set_text(self, data):
         parts = data.split(",")
         self.header = parts[0]
-        self.subtext = parts[1]
+        if(len(parts) > 1):
+            self.subtext = parts[1]
 
 class GeneralScreen(Screen):
     def __init__(self, **kwargs):
@@ -223,6 +253,19 @@ class HomeControlScreen(Screen):
             Color(0,0,0,0.5)
             Rectangle(pos=(0,0), size=self.size)
 
+    def addNewButton(self, *args):
+        view = HomeControlForm()
+        view.open()
+
+class HomeControlForm(ModalView):
+    def __init__(self, **kwargs):
+        super(HomeControlForm, self).__init__(**kwargs)
+
+class HomeControlButton(Widget):
+    def __init__(self, **kwargs):
+        super(HomeControlButton, self).__init__(**kwargs)
+    
+
 class WelcomeScreen(Screen):
     def __init__(self, **kwargs):
         super(WelcomeScreen, self).__init__(**kwargs)
@@ -253,6 +296,8 @@ class RedditRising(ScrollView):
                 title = '\n'.join(title[i:i+26] for i in range(0, len(title), 26))
                 if(len(title) > 64):
                     title = title[:64]+"..."
+                if not post[2].endswith(".jpg"):
+                    post[2] = "icons/reddit.png"
                 self.children[0].add_widget(RedditLink(text=title, thumbnail=post[2], ups=str(post[3]), source=post[6], color=color, url=post[2]))
 
 class RedditLink(Widget):
@@ -297,6 +342,7 @@ class  PiHomeApp(App):
         self.main = mc
         return mc
     
+    
     def build_config(self, config):
         config.setdefaults('General',
             {
@@ -325,7 +371,8 @@ class  PiHomeApp(App):
                 'aioKey': '',
                 'aioEnabled': False,
                 'aioUsername': '',
-                'aioFeedKey': ''
+                'aioFeedKey': '',
+                'aioSendFeedKey': ''
             } 
         )
     

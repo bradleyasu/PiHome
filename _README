@@ -1,0 +1,22 @@
+Working document - Nothing is final
+
+AdaFruit IO Feed API: 
+
+The application will accept the following string formats.  The first parameter is a description of what is being sent, 
+the content is delimited with a ';'
+
+colors are RGBA format. 
+    A valid color would be:  255,255,255,255
+    this is solid color white
+
+seconds_to_disappear is a whole number/int.  After that many seconds have passed, the notification will
+hide and the screen will return home.  If this is left blank, the screen will have to manually be exited
+
+info;color;dataMainText[,dataSubText];title;imageUrl;seconds_to_disappear
+
+image;url;color;seconds_to_disappear
+
+
+todo
+
+leftover artificats in notification window

@@ -70,18 +70,6 @@
     SnackBarButton:
         color: 0,0,0,0.5
         size_hint: None, None
-        pos: 0, (self.parent.height - (80 * 4))
-        size: 80, 80
-        on_press: 
-            app.root.ids.manager.transition.direction = 'down'
-            app.root.ids.manager.current = 'home_control'
-        Image: 
-            source: "icons/spotify.png"
-            pos: 0, (self.parent.parent.height - (80 * 4))
-            size: 80,80
-    SnackBarButton:
-        color: 0,0,0,0.5
-        size_hint: None, None
         pos: 0, 0
         size: 80, 80
         on_press: 
@@ -181,12 +169,102 @@
             outline_color: 0,0,0,0.6
             outline_width: 1
 
-        
+<HomeControlForm>:
+    size_hint: None, None
+    size: 400, 400
+    FloatLayout:
+        Label:
+            text: "Command to send to AdafruitIO"
+            size_hint:None, None
+            pos: root.x+10, root.height- 10
+            size:self.texture_size
+        TextInput:
+            id: hc_command
+            size_hint: None, None
+            size: 380, 30
+            pos: root.x+10, root.height- 50
+            text: "all_lights_off"
+        Label:
+            text: "Image icon to show (png or jpg - url)"
+            size_hint:None, None
+            pos: root.x+10, root.height- 80
+            size:self.texture_size
+        TextInput:
+            id: hc_image_url
+            size_hint: None, None
+            size: 380, 30
+            pos: root.x+10, root.height- 120
+            text: "custom/default.png"
+        Label:
+            text: "Label to display on button"
+            size_hint:None, None
+            pos: root.x+10, root.height- 150
+            size:self.texture_size
+        TextInput:
+            id: hc_label
+            text: "Bedtime"
+            size_hint: None, None
+            size: 380, 30
+            pos: root.x+10, root.height- 190
+        Label:
+            text: "Color of button square (rgba)"
+            size_hint:None, None
+            pos: root.x+10, root.height- 220
+            size:self.texture_size
+        TextInput:
+            id: hc_color
+            text: "0,255,0,240"
+            size_hint: None, None
+            size: 380, 30
+            pos: root.x+10, root.height- 260
+        Button:
+            text: "Create it!"
+            size_hint: None, None
+            size: 150, 50
+            pos: root.x+root.width/2-self.width/2, root.y+30
+            on_press:
+                print hc_color.text
+
 
 <HomeControlScreen>:
     name: "home_control"
     size_hint: None, None
     size: 720, 480
+    Button:
+        text: "Add Button"
+        size_hint: None, None
+        size: 140, 40
+        pos: root.width - 150, root.height - 60
+        on_press: root.addNewButton()
+    ScrollView:
+        id: hc_scroll
+        size_hint: None, None
+        size: 700, 400
+        pos: root.width/2-self.width/2, 0
+        halign:'center'
+        GridLayout:
+            cols: 4
+            size_hint_y:None
+            height: self.minimum_height
+            HomeControlButton:
+                text:"test" 
+
+<HomeControlButton>:
+    size_hint:None, None
+    size: 175, 175
+    text: "N/A"
+    color: [1,1,1,0.5]
+    canvas:
+        Color:
+            rgb: 0.1,0.1,0.1
+        Line:
+            width: 1.
+            rectangle: (self.x, self.y, self.width, self.height)
+        Color:
+            rgba: 0,0,0, 0.7
+        Rectangle:
+            size: self.size
+            pos: self.pos
 
 <AIOScreen>:
     name: "aio"
@@ -218,14 +296,19 @@
         font_size: '32sp'
         outline_color: 0,0,0,1
         outline_width: 1
-    Label:
-        text: root.subtext
+    ScrollView:
         size_hint: None, None
-        size: self.texture_size
-        pos: root.width/2-self.width/2, 60
-        font_size: '20sp'
-        outline_color: 0,0,0,1
-        outline_width: 1
+        size: 700, 65
+        pos: root.width/2-self.width/2, 15
+        Label:
+            text: root.subtext
+            size_hint_y: None
+            text_size: self.width, None
+            height: self.texture_size[1]
+            font_size: '20sp'
+            outline_color: 0,0,0,1
+            outline_width: 1
+            halign: 'center'
 
 <WelcomeScreen>:
     name: "welcome"
@@ -308,6 +391,8 @@
         size: 64,64
         source: root.thumbnail
         pos: root.x+2,root.y+(root.height/2 - self.height/2)
+        on_error: print "Thumbnail Fail"
+        error_image: "icons/reddit.png"
     Label:
         id: title
         size_hint:None, None
@@ -320,5 +405,3 @@
         size_hint:None, None
         pos: root.x+root.width-self.width-10, root.y+5
         size: self.texture_size
-        font_size: '10sp'
-        text: root.ups +" | "+root.source
