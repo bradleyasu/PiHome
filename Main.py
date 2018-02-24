@@ -30,6 +30,8 @@ from WeatherParser import WParse
 from AIOParser import AIOParse
 import subprocess
 import time
+import os 
+import configparser
 
 class MainContainer(FloatLayout):
     screen_saver_on = False
@@ -53,7 +55,7 @@ class MainContainer(FloatLayout):
 
     def screen_saver(self, *args):
         now = int(time.time())
-        if not self.screen_saver_on and now - self.last_touch_time > 30:
+        if not self.screen_saver_on and now - self.last_touch_time > 30 and not os.name== "nt":
             subprocess.call(["sudo", "./backlight", "20"])
             self.screen_saver_on = True
 
@@ -137,8 +139,7 @@ class Manager(ScreenManager):
 
         if data[0] == "image":
             if len(data) > 1:
-                if(data[1].endswith(".png") or data[1].endswith(".jpg")):
-                    self.get_screen("aio").set_image(data[1])
+                self.get_screen("aio").set_image(data[1])
             if len(data) > 2:
                 self.get_screen("aio").set_color(data[2])
             if len(data) > 3:
@@ -172,7 +173,8 @@ class AIOScreen(Screen):
         self.title = title
     
     def set_image(self, image):
-        self.imageSource = image
+        if image.endswith(".jpg") or image.endswith(".png"):
+            self.imageSource = image
 
     def set_color(self, color):
         rgba = color.split(",")
@@ -248,7 +250,9 @@ class WeatherScreen(Screen):
 class HomeControlScreen(Screen):
     def __init__(self, **kwargs):
         super(HomeControlScreen, self).__init__(**kwargs)
+        Clock.schedule_once(self.loadItems, 5)
         self.size = (720, 480)
+        self.root = self
         with self.canvas:
             Color(0,0,0,0.5)
             Rectangle(pos=(0,0), size=self.size)
@@ -256,15 +260,61 @@ class HomeControlScreen(Screen):
     def addNewButton(self, *args):
         view = HomeControlForm()
         view.open()
+        ll = self.loadItems
+        view.bind(on_dismiss=ll)
+
+    def loadItems(self, *args):
+        self.ids.hc_items.clear_widgets()
+        config = configparser.ConfigParser()
+        configName = "customCommands.ini"
+        data = config.read(configName)
+        for command in config.sections():
+            image = config[command]['image']
+            text = config[command]['text']
+            c = config[command]['color'].replace("'", "").replace("u","").replace("[","").replace("]","").split(",")
+            if(len(c) == 4):
+                color = [int(c[0])/255.0,int(c[1])/255.0,int(c[2])/255.0,int(c[3])/255.0]
+            else:
+                color = [0,0,0,0.5]
+            self.ids.hc_items.add_widget(HomeControlButton(command=command,image=image,text=text,color=color))
+        return False
+
 
 class HomeControlForm(ModalView):
+    config = configparser.ConfigParser()
+    configName = "customCommands.ini"
     def __init__(self, **kwargs):
         super(HomeControlForm, self).__init__(**kwargs)
+    
+    def createItem(self, command, url, text, color):
+        self.dismiss()
+        self.config[command] = {
+            "image": url,
+            "text": text,
+            "color": color
+        }
+        with open(self.configName, 'ab') as configFile:
+            self.config.write(configFile)
+
+        
 
 class HomeControlButton(Widget):
+    command = StringProperty("")
+    image = StringProperty("icons/reddit.png")
+    text = StringProperty("(no label)")
+    color = ListProperty([0,0,0,0.5])
     def __init__(self, **kwargs):
         super(HomeControlButton, self).__init__(**kwargs)
+        self.size=175,175
+        self.bind(on_touch_down=self.execute)
     
+    def execute(self, touch, d):
+        if self.collide_point(d.x, d.y):
+            aioUsername = App.get_running_app().config.get('IFTTT', 'aioUsername')
+            aioKey = App.get_running_app().config.get('IFTTT', 'aioKey')
+            aioFeed = App.get_running_app().config.get('IFTTT', 'aioSendFeedKey')
+            if aioUsername != "" and aioKey != "" and aioFeed != "":
+                data = AIOParse().sendItem(aioUsername, aioFeed, aioKey, self.command)
 
 class WelcomeScreen(Screen):
     def __init__(self, **kwargs):
@@ -386,7 +436,8 @@ class  PiHomeApp(App):
             self.main.change_bg()
 
 if __name__ == '__main__':
-    #Builder.load_file("PiHome.kv")
+    if not os.name == "nt":
+        Builder.load_file("PiHome.kv")
     Window.size = (800,480)
     #Window.fullscreen = True
     PiHomeApp().run()

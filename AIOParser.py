@@ -31,6 +31,12 @@ class AIOParse:
         except:
             last = ""
 
+    def sendItem(self, aioUser, aioFeed, apikey, command):
+        try:
+            url = "https://io.adafruit.com/api/v2/"+aioUser+"/feeds/"+aioFeed+"/data"
+            r = requests.post(url, data={'value': command} ,headers = {'X-AIO-Key': apikey})
+        except Exception as E:
+            print E
 
 #AIOParse().getLastItem("byakko00", "pihome","4db30b7befc340a88f50e51f89809b30")
 #AIOParse().deleteItem("byakko00", "pihome","4db30b7befc340a88f50e51f89809b30", "0DT4E6M679VW14VQ4WSKPZJ0FT")

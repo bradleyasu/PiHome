@@ -223,14 +223,16 @@
             size: 150, 50
             pos: root.x+root.width/2-self.width/2, root.y+30
             on_press:
-                print hc_color.text
+                root.createItem(hc_command.text, hc_image_url.text, hc_label.text, hc_color.text)
 
 
 <HomeControlScreen>:
+    id: hc_screen
     name: "home_control"
     size_hint: None, None
     size: 720, 480
     Button:
+        id: add_item
         text: "Add Button"
         size_hint: None, None
         size: 140, 40
@@ -243,17 +245,14 @@
         pos: root.width/2-self.width/2, 0
         halign:'center'
         GridLayout:
+            id: hc_items
             cols: 4
             size_hint_y:None
             height: self.minimum_height
-            HomeControlButton:
-                text:"test" 
 
 <HomeControlButton>:
     size_hint:None, None
     size: 175, 175
-    text: "N/A"
-    color: [1,1,1,0.5]
     canvas:
         Color:
             rgb: 0.1,0.1,0.1
@@ -261,10 +260,23 @@
             width: 1.
             rectangle: (self.x, self.y, self.width, self.height)
         Color:
-            rgba: 0,0,0, 0.7
+            rgba: root.color
         Rectangle:
             size: self.size
             pos: self.pos
+    Label: 
+        text: root.text
+        font_size: "20sp"
+        size_hint: None, None
+        size: self.texture_size
+        pos: root.x + root.width/2-self.width/2, root.y+10
+        outline_color: 0,0,0,1
+        outline_width: 1
+    AsyncImage:
+        source: root.image
+        size_hint: None, None
+        pos: root.x + root.width/2-self.width/2, root.y+root.height/2-self.height/2
+        
 
 <AIOScreen>:
     name: "aio"
@@ -405,3 +417,5 @@
         size_hint:None, None
         pos: root.x+root.width-self.width-10, root.y+5
         size: self.texture_size
+        font_size: '10sp'
+        text: root.ups+" | "+root.source
